@@ -6,11 +6,11 @@ const MASK_OFFSET_Y = 0;
 const MASK_ROTATION_OFFSET = 0;
 const SMOOTHING = 0.65; // 0 = inmediato; <1. Mayor valor = más estabilización.
 // Rasgos reales: 1 = tamaño original. La escala vertical multiplica la general.
-const LEFT_EYE_SCALE = 1.35;
-const RIGHT_EYE_SCALE = 1.35;
-const MOUTH_SCALE = 1.25;
-const EYE_VERTICAL_SCALE = 1.15;
-const MOUTH_VERTICAL_SCALE = 1.15;
+const LEFT_EYE_SCALE = 1.50;
+const RIGHT_EYE_SCALE = 1.50;
+const MOUTH_SCALE = 1.40;
+const EYE_VERTICAL_SCALE = 1.40;
+const MOUTH_VERTICAL_SCALE = 1.40;
 const MAX_FPS = 30;
 const PNG_ANCHORS = { left: [390/1024,705/1536], right: [645/1024,705/1536], mouth: [515/1024,923/1536] };
 const VERSION = '0.10.21';
@@ -23,26 +23,8 @@ let mask, anchors, fallback = true, width = 0, height = 0;
 const oval = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
 function status(message = '') { $('status').textContent = message; $('status').hidden = !message; }
 
-// Máscara temporal creada por código, con alfa 0 en ojos, boca y exterior.
-function testMask() {
-  const c = document.createElement('canvas'); c.width = 600; c.height = 800;
-  const g = c.getContext('2d');
-  const ellipse = (x,y,rx,ry,color) => { g.fillStyle=color;g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fill(); };
-  ellipse(150,550,95,230,'#3f813c'); ellipse(450,550,95,230,'#3f813c');
-  ellipse(300,425,184,310,'#eeb62f');
-  g.save();g.beginPath();g.ellipse(300,425,174,300,0,0,Math.PI*2);g.clip();
-  for(let y=160;y<740;y+=37)for(let x=130;x<490;x+=42)ellipse(x+(y%2)*9,y,17,14,'#ffdc62');
-  g.restore();
-  g.fillStyle='#bf302e';g.beginPath();g.moveTo(130,600);g.lineTo(460,600);g.lineTo(340,770);g.closePath();g.fill();
-  ellipse(300,150,260,60,'#c88b42');ellipse(300,80,130,78,'#e5b861');
-  g.fillStyle='#2b6140';g.fillRect(177,100,246,30);
-  g.globalCompositeOperation='destination-out';
-  ellipse(215,330,58,44,'black');ellipse(385,330,58,44,'black');ellipse(300,475,90,62,'black');
-  g.globalCompositeOperation='source-over';
-  return { image:c, points:{left:[215,330],right:[385,330],mouth:[300,475]} };
-}
 async function loadMask() {
-  const test = testMask(); mask = test.image; anchors = test.points;
+  // Nunca sustituir el personaje original por un diseño de prueba.
   try {
     const img = new Image();img.src = 'assets/elote-ranchero.png';await img.decode();
     const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
@@ -54,10 +36,10 @@ async function loadMask() {
     const clearHole=([x,y])=>{for(let dy=-8;dy<=8;dy+=4)for(let dx=-8;dx<=8;dx+=4)if(alpha(x+dx,y+dy)>10)return false;return true;};
     let transparent=0;for(let i=3;i<data.length;i+=4)if(data[i]<10)transparent++;
     if(transparent < c.width*c.height*.05 || !Object.values(points).every(clearHole)) {
-      console.warn('PNG no apto: requiere exterior y huecos de ojos/boca con transparencia alfa real. Se usa máscara de prueba.');return;
+      throw new Error('El PNG original requiere transparencia real en el exterior, ojos y boca.');
     }
     mask=img;anchors=points;fallback=false;
-  } catch(e) { console.warn('No se pudo cargar/verificar el PNG. Se usa máscara de prueba.',e); }
+  } catch(e) { console.error('No se pudo cargar/verificar el PNG original. No se sustituirá el diseño.',e);throw e; }
 }
 function resize() {
   const r=$('stage').getBoundingClientRect();width=r.width;height=r.height;
