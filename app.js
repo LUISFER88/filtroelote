@@ -26,7 +26,7 @@ function status(message = '') { $('status').textContent = message; $('status').h
 async function loadMask() {
   // Nunca sustituir el personaje original por un diseño de prueba.
   try {
-    const img = new Image();img.src = 'assets/elote-ranchero.png';await img.decode();
+    const img = new Image();img.src = './elote-ranchero.png';await img.decode();
     const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
     const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0);
     const data=g.getImageData(0,0,c.width,c.height).data;
